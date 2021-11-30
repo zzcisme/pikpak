@@ -9,8 +9,8 @@ instance.interceptors.request.use(request => {
   if (pikpakLogin.access_token) {
     request.headers['Authorization'] = `${pikpakLogin.token_type || 'Bearer'} ${pikpakLogin.access_token}`
   }
-  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
-    request.url = 'https://cors.z7.workers.dev/' + request.url
+  if(request.url?.indexOf('https://cors.z10.workers.dev') === -1) {
+    request.url = 'https://cors.z10.workers.dev/' + request.url
   }
   return request
 })
@@ -78,8 +78,8 @@ instance2.interceptors.request.use(request => {
     'Notion-Version': '2021-08-16',
     'Content-Type': 'application/json'
   }
-  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
-    request.url = 'https://cors.z7.workers.dev/' + request.url
+  if(request.url?.indexOf('https://cors.z11.workers.dev') === -1) {
+    request.url = 'https://cors.z11.workers.dev/' + request.url
   }
   return request
 })

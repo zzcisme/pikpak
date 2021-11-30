@@ -60,7 +60,8 @@ import http from '../utils/axios'
 import { useRouter } from 'vue-router'
 import { BrandGoogle, Mail } from '@vicons/tabler'
 import {  onUnmounted } from '@vue/runtime-core'
-import axios from 'axios';
+import {sendCode as sendCodeApi, register as registerApi} from '@/api/user'
+import axios from 'axios'
 const loginData = ref({
   phone_number: '',
   verification_code: '',
@@ -81,61 +82,21 @@ const codeLoading  = ref(false)
 const loading = ref(false)
 const router = useRouter()
 const message = useMessage()
-// 32随机数
-const randomString = () =>  {
-    let len = 32;
-    let chars ='abcdefhijkmnprstwxyz2345678';
-    let maxPos = chars.length;
-    let character = '';
-    for (let i = 0; i < len; i++) {
-        character += chars.charAt(Math.floor(Math.random() * maxPos))
-    }
-    return character;
-}
-const deviceId = randomString()
-const initCaptcha = (action?:string) => {
-  return http.post('https://user.mypikpak.com/v1/shield/captcha/init?client_id=YNxT9w7GMdWvEOKa', {
-    action: action || "POST:/v1/auth/verification",
-    captcha_token: loginData.value.captcha_token || '',
-    client_id: "YNxT9w7GMdWvEOKa",
-    device_id: deviceId,
-    meta: {
-      "phone_number": loginData.value.phone_number,
-    },
-    redirect_uri: "xlaccsdk01://xunlei.com/callback?state\u003dharbor"
-  })
-    .then((res:any) => {
-      if(res.data && res.data.captcha_token) {
-        loginData.value.captcha_token = res.data.captcha_token
-      }
-    })
-}
+
 const isUser = ref(false)
 const sendCode = () => {
   if(!loginData.value.phone_number) {
     return false
   } else {
-    loginData.value.captcha_token = ''
     codeLoading.value = true
-    initCaptcha("POST:/v1/auth/verification")
-      .then(() => {
-        http.post('https://user.mypikpak.com/v1/auth/verification?client_id=YNxT9w7GMdWvEOKa', {
-          captcha_token: loginData.value.captcha_token,
-          client_id: "YNxT9w7GMdWvEOKa",
-          phone_number: loginData.value.phone_number,
-          locale: "zh-cn",
-          target: "ANY",
-        })
-        .then((res:any) => {
-          loginData.value.verification_id = res.data.verification_id
-          isUser.value = res.data.is_user || false
-          coutdown()
-        })
-        .finally(() => {
-          codeLoading.value = false
-        })
+    sendCodeApi({
+      phone_number: loginData.value.phone_number,
+    })
+      .then(res => {
+        isUser.value = res.data.is_user
+        coutdown()
       })
-      .catch(() =>{
+      .finally(() => {
         codeLoading.value = false
       })
   }
@@ -159,43 +120,19 @@ const register = (e:Event) => {
   formRef.value.validate((errors:any)=>{
     if(!errors) {
       loading.value = true
-      http.post('https://user.mypikpak.com/v1/auth/verification/verify?client_id=YNxT9w7GMdWvEOKa', {
-        client_id: "YNxT9w7GMdWvEOKa",
-        verification_id: loginData.value.verification_id,
+      registerApi({
+        phone_number: loginData.value.phone_number,
         verification_code: loginData.value.verification_code
-      }).then((res:any) => {
-        initCaptcha(isUser.value ? 'POST:/v1/auth/signin': 'POST:/v1/auth/signup')
-          .then(() => {
-            let url = 'https://user.mypikpak.com/v1/auth/signup'
-            let data:any = {
-              captcha_token: loginData.value.captcha_token,
-              client_id: 'YNxT9w7GMdWvEOKa',
-              client_secret: "dbw2OtmVEeuUvIptb1Coyg",
-              verification_token: res.data.verification_token
-            }
-            if(isUser.value) {
-              url = 'https://user.mypikpak.com/v1/auth/signin'
-              data.username = loginData.value.phone_number
-            } else {
-              data.phone_number = loginData.value.phone_number
-              data.password = ''
-              data.name = 'U_' + loginData.value.phone_number.slice(-4)
-            }
-            http.post(url, data)
-              .then((res:any) => {
-                if(invite.value && !isUser.value) {
-                  vipInvite(res.data)
-                }
-                window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
-                window.localStorage.removeItem('pikpakLoginData')
-                message.success('登录成功')
-                router.push('/')
-              })
-              .catch((err:any) => {
-                loading.value = false
-              })
-          })
       })
+        .then(res => {
+          if(invite.value && !isUser.value) {
+            vipInvite(res.data)
+          }
+          window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
+          window.localStorage.removeItem('pikpakLoginData')
+          message.success('登录成功')
+          router.push('/')
+        })
         .catch((err:any) => {
           loading.value = false
         })

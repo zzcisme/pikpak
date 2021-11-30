@@ -61,6 +61,7 @@ import { NForm, NFormItem, NInput, NButton, useMessage, NCheckbox, useDialog, NT
 import http from '../utils/axios'
 import { useRouter } from 'vue-router'
 import { BrandGoogle, Phone } from '@vicons/tabler'
+import { signin } from '@/api/user'
 const loginData = ref({
   username: '',
   password: ''
@@ -73,13 +74,11 @@ const loginPost = () => {
     return false
   }
   loading.value = true
-  http.post('https://user.mypikpak.com/v1/auth/signin', {
-    "captcha_token": "",
-    "client_id": "YNxT9w7GMdWvEOKa",
-    "client_secret": "dbw2OtmVEeuUvIptb1Coyg",
-    ...loginData.value
+  signin({
+    username: loginData.value.username,
+    password: loginData.value.password,
   })
-    .then((res:any) => {
+    .then((res) => {
       if(res.data && res.data.access_token) {
         window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
         if(remember.value) {

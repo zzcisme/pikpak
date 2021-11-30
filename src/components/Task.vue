@@ -68,13 +68,13 @@ import { CircleX } from '@vicons/tabler'
     loading.value = true
     http.get('https://api-drive.mypikpak.com/drive/v1/tasks', {
       params: {
-        type: 'offline',
+        // type: 'offline',
         filters: {
-          "phase": {"eq": "PHASE_TYPE_RUNNING"}
+          // "phase": {"eq": "PHASE_TYPE_PENDING"}
         },
         page_token: pageToken.value || undefined,
-        thumbnail_size: 'SIZE_LARGE',
-        with: 'reference_resource'
+        // thumbnail_size: 'SIZE_LARGE',
+        // with: 'reference_resource'
       }
     })
       .then((res:any) => {
